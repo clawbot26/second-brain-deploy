@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Providers } from './providers'
 
 export const metadata: Metadata = {
   title: '2nd Brain - clawai',
@@ -11,7 +12,7 @@ export const metadata: Metadata = {
  * Root Layout Component
  *
  * Provides the base HTML structure for the application
- * Includes navigation header and dark mode support
+ * Includes navigation header, dark mode support, and timezone detection
  */
 export default function RootLayout({
   children,
@@ -21,7 +22,8 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className="antialiased">
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+        <Providers>
+          <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
           {/* Navigation Header */}
           <nav
             className="bg-white dark:bg-slate-800 shadow-sm border-b border-slate-200 dark:border-slate-700 sticky top-0 z-50"
@@ -59,7 +61,8 @@ export default function RootLayout({
               </p>
             </div>
           </footer>
-        </div>
+          </div>
+        </Providers>
       </body>
     </html>
   )

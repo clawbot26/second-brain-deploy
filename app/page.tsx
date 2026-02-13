@@ -1,40 +1,65 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { StatCard, MemoryList, MemoryViewer, ErrorBoundary } from '@/components'
-import type { Memory, MemoryAPIResponse } from '@/lib/types'
+import {
+  StatCard,
+  MemoryList,
+  MemoryViewer,
+  ErrorBoundary,
+  SaveMemoForm,
+  MemoList,
+  MemoViewer as MemoViewerComponent,
+} from '@/components'
+import type { Memory, MemoryAPIResponse, Memo, MemoAPIResponse } from '@/lib/types'
+import { apiFetch } from '@/lib/api-client'
 
 /**
  * Home Page Component
  *
- * Main dashboard for browsing and viewing memories.
+ * Main dashboard for browsing and viewing memories and memos.
  * Features:
- * - Statistics dashboard with memory count
+ * - Statistics dashboard with memory and memo counts
  * - Memory timeline list with search and selection
  * - Memory viewer with content display
+ * - Save memo form for quick note creation
+ * - Saved memos list with management
+ * - Memo viewer with edit and delete capabilities
  * - Error handling and loading states
  * - Dark mode support
+ * - Tab-based navigation between memories and memos
  */
 export default function Home() {
+  // Memory state
   const [memories, setMemories] = useState<Memory[]>([])
   const [selectedMemory, setSelectedMemory] = useState<Memory | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [memoryLoading, setMemoryLoading] = useState(true)
+  const [memoryError, setMemoryError] = useState<string | null>(null)
+
+  // Memo state
+  const [memos, setMemos] = useState<Memo[]>([])
+  const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
+  const [memoLoading, setMemoLoading] = useState(true)
+  const [memoError, setMemoError] = useState<string | null>(null)
+  const [memoSuccess, setMemoSuccess] = useState<string | null>(null)
+  const [memoDeleting, setMemoDeleting] = useState(false)
+
+  // UI state
+  const [activeTab, setActiveTab] = useState<'memories' | 'memos'>('memories')
+  const [memoFilterCategory, setMemoFilterCategory] = useState<string>('')
 
   /**
    * Fetch memories from the API
-   * Handles loading state, error state, and pagination
+   * Handles loading state, error state, pagination, and timezone
    */
   const fetchMemories = useCallback(async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch('/api/memories?limit=100&offset=0', {
+      // Use apiFetch to automatically include timezone header
+      const response = await apiFetch('/api/memories?limit=100&offset=0', {
         method: 'GET',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        includeTimezone: true,
       })
 
       if (!response.ok) {
