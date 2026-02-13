@@ -52,8 +52,8 @@ export default function Home() {
    * Handles loading state, error state, pagination, and timezone
    */
   const fetchMemories = useCallback(async () => {
-    setLoading(true)
-    setError(null)
+    setMemoryLoading(true)
+    setMemoryError(null)
 
     try {
       // Use apiFetch to automatically include timezone header
@@ -69,7 +69,7 @@ export default function Home() {
       const data: MemoryAPIResponse = await response.json()
 
       if (data.error) {
-        setError(data.error)
+        setMemoryError(data.error)
         setMemories([])
       } else if (data.memories && data.memories.length > 0) {
         setMemories(data.memories)
@@ -80,10 +80,10 @@ export default function Home() {
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load memories'
-      setError(errorMessage)
+      setMemoryError(errorMessage)
       setMemories([])
     } finally {
-      setLoading(false)
+      setMemoryLoading(false)
     }
   }, [])
 
@@ -104,7 +104,7 @@ export default function Home() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Error Banner */}
-      <ErrorBoundary error={error} onRetry={fetchMemories} />
+      <ErrorBoundary error={memoryError} onRetry={fetchMemories} />
 
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-6">
@@ -133,8 +133,8 @@ export default function Home() {
             memories={memories}
             selectedDate={selectedMemory?.date}
             onSelect={handleSelectMemory}
-            isLoading={loading}
-            error={error}
+            isLoading={memoryLoading}
+            error={memoryError}
           />
         </div>
 
@@ -148,11 +148,11 @@ export default function Home() {
       <div className="mt-8 flex justify-center">
         <button
           onClick={fetchMemories}
-          disabled={loading}
+          disabled={memoryLoading}
           className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors font-medium"
           aria-label="Refresh memories"
         >
-          {loading ? 'Loading...' : 'Refresh Memories'}
+          {memoryLoading ? 'Loading...' : 'Refresh Memories'}
         </button>
       </div>
     </div>
