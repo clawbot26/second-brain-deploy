@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "db:init": "tsx scripts/init-db.ts",
-    "db:sync": "tsx scripts/sync-memories.ts"
+    "db:sync": "tsx scripts/sync-memories.ts",
+    "db:sync-one": "tsx scripts/sync-single-memory.ts"
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.2",
