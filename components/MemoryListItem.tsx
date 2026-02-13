@@ -1,0 +1,47 @@
+import { Memory } from '@/lib/db'
+
+interface MemoryListItemProps {
+  memory: Memory
+  isSelected: boolean
+  onClick: (memory: Memory) => void
+}
+
+export function MemoryListItem({ memory, isSelected, onClick }: MemoryListItemProps) {
+  return (
+    <button
+      onClick={() => onClick(memory)}
+      className={`w-full text-left px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${
+        isSelected ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : ''
+      }`}
+    >
+      <div className="flex items-center justify-between">
+        <span className="text-sm font-medium text-slate-900 dark:text-white truncate flex-1">
+          {memory.date}
+        </span>
+        {memory.category && (
+          <span className="ml-2 inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-slate-300">
+            {memory.category}
+          </span>
+        )}
+        <span className="ml-2 text-xs text-slate-500 flex-shrink-0">
+          {Math.ceil(memory.content.length / 100)} min read
+        </span>
+      </div>
+      {memory.tags && memory.tags.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {memory.tags.slice(0, 2).map((tag) => (
+            <span
+              key={tag}
+              className="inline-block text-xs px-2 py-1 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded"
+            >
+              #{tag}
+            </span>
+          ))}
+          {memory.tags.length > 2 && (
+            <span className="inline-block text-xs text-slate-500">+{memory.tags.length - 2}</span>
+          )}
+        </div>
+      )}
+    </button>
+  )
+}
