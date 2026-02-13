@@ -5,22 +5,31 @@ A NextJS-based dashboard to browse and manage your memories, documents, and task
 ## Features
 
 ### ✅ Implemented
-- **Memory Timeline**: Browse all daily memory files from `/memory/` directory
-- **Memory Viewer**: Read full content of any memory file
-- **Stats Dashboard**: See total number of memories
+- **Memory Timeline**: Browse all daily memory files from database with pagination
+- **Memory Viewer**: Read full content of any memory file with statistics
+- **Stats Dashboard**: See total number of memories at a glance
 - **Dark Mode Support**: Automatic dark/light theme based on system preferences
 - **Responsive Design**: Works on mobile, tablet, and desktop
+- **Type-Safe**: Full TypeScript with strict mode and enhanced type checking
+- **Accessible**: WCAG compliant with proper ARIA labels and semantic HTML
+- **Optimized**: Memoized components, proper caching headers, pagination support
+- **Category & Tags**: Organize and view memories with categories and tags
 
 ### 🚧 Coming Soon
 - **Search**: Full-text search across all memories
 - **Documents**: Browse and manage document files
 - **Tasks**: Track and manage tasks
-- **Tags**: Organize memories with tags
 - **Calendar View**: View memories by calendar date
 - **Export**: Export memories to PDF or other formats
 - **MEMORY.md Integration**: View long-term curated memories
+- **Advanced Filtering**: Filter by category, date range, tags
 
 ## Getting Started
+
+### Prerequisites
+- Node.js 18+
+- npm or yarn
+- PostgreSQL database (Neon recommended)
 
 ### Setup
 
@@ -31,7 +40,7 @@ A NextJS-based dashboard to browse and manage your memories, documents, and task
 
 2. **Configure environment** (create `.env.local`):
    ```
-   DATABASE_URL=postgresql://...
+   DATABASE_URL=postgresql://user:password@host/database
    ```
 
 3. **Initialize database**:
@@ -42,6 +51,8 @@ A NextJS-based dashboard to browse and manage your memories, documents, and task
 4. **Sync existing memories** (optional):
    ```bash
    npm run db:sync
+   # Or with debug output:
+   DEBUG=true npm run db:sync
    ```
 
 ### Development

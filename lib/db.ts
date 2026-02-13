@@ -119,7 +119,7 @@ export async function getMemoryByDate(date: string): Promise<Memory | undefined>
  * @param category - Optional category label
  * @param tags - Optional array of tags
  * @returns The created Memory object
- * @throws Error if database insert fails or validation fails
+ * @throws DatabaseError if database insert fails or validation fails
  */
 export async function createMemory(
   date: string,
@@ -127,12 +127,19 @@ export async function createMemory(
   category?: string,
   tags?: string[]
 ): Promise<Memory> {
+  // Validate inputs
   if (!date || !content) {
-    throw new Error('Date and content are required')
+    throw new DatabaseError(
+      'Date and content are required',
+      'VALIDATION_ERROR'
+    )
   }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error('Invalid date format. Use YYYY-MM-DD')
+  if (!isValidDate(date)) {
+    throw new DatabaseError(
+      'Invalid date format. Use YYYY-MM-DD',
+      'INVALID_DATE_FORMAT'
+    )
   }
 
   try {
@@ -141,10 +148,21 @@ export async function createMemory(
       VALUES (${date}, ${content}, ${category || null}, ${tags || null})
       RETURNING *
     `
+    if (!result || result.length === 0) {
+      throw new DatabaseError(
+        'Failed to create memory record',
+        'INSERT_FAILED'
+      )
+    }
     return result[0]
   } catch (error) {
+    if (error instanceof DatabaseError) throw error
     console.error(`Error creating memory for date ${date}:`, error)
-    throw error
+    throw new DatabaseError(
+      `Failed to create memory for date ${date}`,
+      'CREATE_ERROR',
+      error
+    )
   }
 }
 
@@ -155,7 +173,7 @@ export async function createMemory(
  * @param category - Optional category label
  * @param tags - Optional array of tags
  * @returns The updated or created Memory object
- * @throws Error if database operation fails or validation fails
+ * @throws DatabaseError if database operation fails or validation fails
  */
 export async function updateMemory(
   date: string,
@@ -163,12 +181,19 @@ export async function updateMemory(
   category?: string,
   tags?: string[]
 ): Promise<Memory> {
+  // Validate inputs
   if (!date || !content) {
-    throw new Error('Date and content are required')
+    throw new DatabaseError(
+      'Date and content are required',
+      'VALIDATION_ERROR'
+    )
   }
 
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error('Invalid date format. Use YYYY-MM-DD')
+  if (!isValidDate(date)) {
+    throw new DatabaseError(
+      'Invalid date format. Use YYYY-MM-DD',
+      'INVALID_DATE_FORMAT'
+    )
   }
 
   try {
@@ -183,15 +208,20 @@ export async function updateMemory(
       RETURNING *
     `
 
-    if (result.length > 0) {
+    if (result && result.length > 0) {
       return result[0]
     }
 
     // If no rows were updated, create new memory
     return createMemory(date, content, category, tags)
   } catch (error) {
+    if (error instanceof DatabaseError) throw error
     console.error(`Error updating memory for date ${date}:`, error)
-    throw error
+    throw new DatabaseError(
+      `Failed to update memory for date ${date}`,
+      'UPDATE_ERROR',
+      error
+    )
   }
 }
 
