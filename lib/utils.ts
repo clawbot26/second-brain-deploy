@@ -67,3 +67,38 @@ export function getErrorMessage(error: unknown): string {
   if (typeof error === 'string') return error
   return 'An unknown error occurred'
 }
+
+/**
+ * Format a date string to a long local date format using a timezone
+ * @param dateString - Date string in YYYY-MM-DD format or ISO format
+ * @param timezone - IANA timezone string (e.g., 'America/New_York')
+ * @returns Formatted date string (e.g., "January 15, 2024")
+ */
+export function formatToLocalDateLong(dateString: string, timezone: string): string {
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      timeZone: timezone,
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  } catch {
+    // Fallback to simple date string if formatting fails
+    return dateString
+  }
+}
+
+/**
+ * Get the browser's detected timezone
+ * @returns IANA timezone string (e.g., 'America/New_York')
+ */
+export function getBrowserTimezone(): string {
+  if (typeof window === 'undefined') return 'UTC'
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+  } catch {
+    return 'UTC'
+  }
+}

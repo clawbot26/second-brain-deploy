@@ -3,7 +3,8 @@
  * Handles automatic timezone header injection for timezone-aware API calls
  */
 
-import { getTimezoneFromSession, getBrowserTimezone } from './timezone-context'
+import { getTimezoneFromSession } from './timezone-context'
+import { getBrowserTimezone } from './utils'
 
 /**
  * Fetch options with timezone awareness

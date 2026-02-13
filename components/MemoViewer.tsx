@@ -41,14 +41,14 @@ export const MemoViewer = memo(function MemoViewer({
 
   const displayDate = useMemo(() => {
     if (!memo || !isLoaded) return memo ? 'Loading...' : 'Select a Memo'
-    const date = new Date(memo.created_at).toISOString().split('T')[0]
+    const date = new Date(memo.created_at).toISOString().split('T')[0] ?? ''
     return formatToLocalDateLong(date, timezone)
   }, [memo, timezone, isLoaded])
 
   const updatedDate = useMemo(() => {
     if (!memo || !isLoaded) return ''
-    const date = new Date(memo.updated_at).toISOString().split('T')[0]
-    const createdDate = new Date(memo.created_at).toISOString().split('T')[0]
+    const date = new Date(memo.updated_at).toISOString().split('T')[0] ?? ''
+    const createdDate = new Date(memo.created_at).toISOString().split('T')[0] ?? ''
     if (date !== createdDate) {
       return formatToLocalDateLong(date, timezone)
     }

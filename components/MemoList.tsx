@@ -86,7 +86,7 @@ export const MemoList = memo(function MemoList({
           filteredMemos.map((memo) => {
             const formattedDate = isLoaded
               ? formatToLocalDateLong(
-                  new Date(memo.created_at).toISOString().split('T')[0],
+                  new Date(memo.created_at).toISOString().split('T')[0] ?? '',
                   timezone
                 )
               : new Date(memo.created_at).toLocaleDateString()

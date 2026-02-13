@@ -13,10 +13,27 @@ export interface Memory {
   updated_at: string | Date
 }
 
+/** Alias for Memory - used in memo-specific contexts */
+export type Memo = Memory
+
 /** API response type for memory operations */
 export interface MemoryAPIResponse {
   memories?: Memory[]
   memory?: Memory
+  error?: string
+  code?: string
+  details?: unknown
+  count?: number
+  limit?: number
+  offset?: number
+  hasMore?: boolean
+}
+
+/** API response type for memo operations (includes memo field for memo-specific APIs) */
+export interface MemoAPIResponse {
+  memo?: Memory
+  memory?: Memory
+  memories?: Memory[]
   error?: string
   code?: string
   details?: unknown
