@@ -77,11 +77,24 @@ second-brain/
 ├── app/
 │   ├── api/
 │   │   └── memories/
-│   │       └── route.ts          # API endpoint for reading memory files
-│   ├── layout.tsx                # Root layout with navigation
-│   ├── page.tsx                  # Main dashboard page
-│   └── globals.css               # Global styles with Tailwind
-├── components/                   # Reusable React components (to be added)
+│   │       └── route.ts              # API endpoint for reading memories with pagination
+│   ├── layout.tsx                    # Root layout with navigation and footer
+│   ├── page.tsx                      # Main dashboard page
+│   └── globals.css                   # Global styles with Tailwind and utilities
+├── components/
+│   ├── StatCard.tsx                  # Dashboard stat card component
+│   ├── MemoryList.tsx                # Memory timeline container
+│   ├── MemoryListItem.tsx            # Individual memory item with metadata
+│   ├── MemoryViewer.tsx              # Memory content viewer
+│   └── index.ts                      # Component exports
+├── lib/
+│   ├── db.ts                         # Database operations and queries
+│   ├── hooks.ts                      # Custom React hooks (useFetchMemories)
+│   └── types.ts                      # TypeScript type definitions
+├── scripts/
+│   ├── init-db.ts                    # Database initialization script
+│   ├── sync-memories.ts              # Sync all memories to database
+│   └── sync-single-memory.ts         # Sync single memory file
 ├── package.json
 └── tsconfig.json
 ```

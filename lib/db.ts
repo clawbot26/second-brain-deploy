@@ -229,21 +229,30 @@ export async function updateMemory(
  * Delete a memory by date
  * @param date - The date of the memory (YYYY-MM-DD format)
  * @returns true if memory was deleted, false if not found
- * @throws Error if database operation fails
+ * @throws DatabaseError if date format is invalid or database operation fails
  */
 export async function deleteMemory(date: string): Promise<boolean> {
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error('Invalid date format. Use YYYY-MM-DD')
+  if (!isValidDate(date)) {
+    throw new DatabaseError(
+      'Invalid date format. Use YYYY-MM-DD',
+      'INVALID_DATE_FORMAT'
+    )
   }
 
   try {
-    const result = await sql`
+    await sql`
       DELETE FROM memories
       WHERE date = ${date}
     `
+    // Note: Neon's client doesn't provide row count directly
+    // We assume deletion was successful if no error was thrown
     return true
   } catch (error) {
     console.error(`Error deleting memory for date ${date}:`, error)
-    throw error
+    throw new DatabaseError(
+      `Failed to delete memory for date ${date}`,
+      'DELETE_ERROR',
+      error
+    )
   }
 }

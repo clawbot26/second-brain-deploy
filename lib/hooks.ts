@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
-import { Memory } from './db'
+import { useCallback, useEffect, useState } from 'react'
+import type { Memory, MemoryAPIResponse } from './types'
+import { getErrorMessage } from './utils'
 
 interface UseFetchMemoriesResult {
   memories: Memory[]
@@ -10,14 +11,14 @@ interface UseFetchMemoriesResult {
 
 /**
  * Custom hook to fetch memories from the API
- * Handles loading and error states
+ * Handles loading and error states with proper dependency management
  */
 export function useFetchMemories(): UseFetchMemoriesResult {
   const [memories, setMemories] = useState<Memory[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  const fetchMemories = async () => {
+  const fetchMemories = useCallback(async () => {
     setIsLoading(true)
     setError(null)
 
@@ -30,28 +31,33 @@ export function useFetchMemories(): UseFetchMemoriesResult {
       })
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch memories: ${response.statusText}`)
+        throw new Error(`HTTP ${response.status}: Failed to fetch memories`)
       }
 
-      const data = await response.json()
+      const data: MemoryAPIResponse = await response.json()
+
+      if (data.error) {
+        throw new Error(data.error)
+      }
 
       if (!data.memories || !Array.isArray(data.memories)) {
-        throw new Error('Invalid response format')
+        throw new Error('Invalid response format: memories array missing')
       }
 
       setMemories(data.memories)
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Unknown error'
+      const errorMessage = getErrorMessage(err)
       setError(errorMessage)
       console.error('Error loading memories:', errorMessage)
+      setMemories([])
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [])
 
   useEffect(() => {
     fetchMemories()
-  }, [])
+  }, [fetchMemories])
 
   return {
     memories,
