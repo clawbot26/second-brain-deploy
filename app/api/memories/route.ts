@@ -1,5 +1,7 @@
 import { NextResponse, NextRequest } from 'next/server'
-import { getMemories, getMemoriesCount } from '@/lib/db'
+import { getMemories, getMemoriesCount, DatabaseError } from '@/lib/db'
+import { getErrorMessage } from '@/lib/utils'
+import { PAGINATION } from '@/lib/constants'
 import type { MemoryAPIResponse } from '@/lib/types'
 
 /**
@@ -17,29 +19,29 @@ export async function GET(request: NextRequest): Promise<NextResponse<MemoryAPIR
   try {
     // Extract and validate query parameters
     const searchParams = request.nextUrl.searchParams
-    let limit = parseInt(searchParams.get('limit') ?? '100', 10)
-    let offset = parseInt(searchParams.get('offset') ?? '0', 10)
+    let limit = parseInt(searchParams.get('limit') ?? String(PAGINATION.DEFAULT_LIMIT), 10)
+    let offset = parseInt(searchParams.get('offset') ?? String(PAGINATION.DEFAULT_OFFSET), 10)
 
     // Validate and clamp pagination parameters
-    if (isNaN(limit) || limit < 1) limit = 100
-    if (isNaN(offset) || offset < 0) offset = 0
-    if (limit > 500) limit = 500
+    if (isNaN(limit) || limit < 1) limit = PAGINATION.DEFAULT_LIMIT
+    if (isNaN(offset) || offset < 0) offset = PAGINATION.DEFAULT_OFFSET
+    limit = Math.min(limit, PAGINATION.MAX_LIMIT)
 
-    // Fetch memories and count
+    // Fetch memories and count in parallel
     const [memories, count] = await Promise.all([
       getMemories(limit, offset),
       getMemoriesCount(),
     ])
 
-    // Transform memories for API response
+    // Transform memories for API response - ensure dates are ISO strings
     const transformedMemories = memories.map((memory) => ({
       ...memory,
       created_at: memory.created_at instanceof Date 
         ? memory.created_at.toISOString() 
-        : memory.created_at,
+        : String(memory.created_at),
       updated_at: memory.updated_at instanceof Date 
         ? memory.updated_at.toISOString() 
-        : memory.updated_at,
+        : String(memory.updated_at),
     }))
 
     return NextResponse.json(
@@ -59,12 +61,27 @@ export async function GET(request: NextRequest): Promise<NextResponse<MemoryAPIR
       }
     )
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+    // Handle known database errors
+    if (error instanceof DatabaseError) {
+      console.error(`API Error (${error.code}) - GET /api/memories:`, error.message)
+      return NextResponse.json(
+        {
+          error: error.message,
+          code: error.code,
+          details: process.env.NODE_ENV === 'development' ? error.originalError : undefined,
+        },
+        { status: 500 }
+      )
+    }
+
+    // Handle unknown errors
+    const errorMessage = getErrorMessage(error)
     console.error('API Error - GET /api/memories:', errorMessage)
 
     return NextResponse.json(
       {
         error: 'Failed to load memories',
+        code: 'UNKNOWN_ERROR',
         details: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
       },
       { status: 500 }

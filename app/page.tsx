@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { StatCard, MemoryList, MemoryViewer } from '@/components'
+import { StatCard, MemoryList, MemoryViewer, ErrorBoundary } from '@/components'
 import type { Memory, MemoryAPIResponse } from '@/lib/types'
 
 /**
@@ -46,12 +46,12 @@ export default function Home() {
       if (data.error) {
         setError(data.error)
         setMemories([])
+      } else if (data.memories && data.memories.length > 0) {
+        setMemories(data.memories)
+        // Auto-select the first memory for initial load
+        setSelectedMemory(data.memories[0]!)
       } else if (data.memories) {
         setMemories(data.memories)
-        // Auto-select the first memory if available
-        if (data.memories.length > 0 && !selectedMemory) {
-          setSelectedMemory(data.memories[0])
-        }
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load memories'
@@ -60,7 +60,7 @@ export default function Home() {
     } finally {
       setLoading(false)
     }
-  }, [selectedMemory])
+  }, [])
 
   /**
    * Fetch memories on component mount
@@ -78,8 +78,11 @@ export default function Home() {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Error Banner */}
+      <ErrorBoundary error={error} onRetry={fetchMemories} />
+
       {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-6">
         <StatCard
           icon="📝"
           label="Total Memories"

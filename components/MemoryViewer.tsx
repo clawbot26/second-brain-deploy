@@ -2,6 +2,7 @@
 
 import { memo, useMemo } from 'react'
 import type { Memory } from '@/lib/types'
+import { calculateMemoryStats } from '@/lib/utils'
 
 interface MemoryViewerProps {
   memory: Memory | null
@@ -20,10 +21,7 @@ export const MemoryViewer = memo(function MemoryViewer({
 }: MemoryViewerProps) {
   const stats = useMemo(() => {
     if (!memory) return null
-    const lines = memory.content.split('\n').length
-    const words = memory.content.split(/\s+/).length
-    const chars = memory.content.length
-    return { lines, words, chars }
+    return calculateMemoryStats(memory.content)
   }, [memory])
 
   return (
@@ -37,7 +35,7 @@ export const MemoryViewer = memo(function MemoryViewer({
             <div className="flex gap-4 text-xs text-slate-500 flex-shrink-0">
               <span>{stats.lines} lines</span>
               <span>{stats.words} words</span>
-              <span>{stats.chars} chars</span>
+              <span>{stats.minRead} min read</span>
             </div>
           )}
         </div>

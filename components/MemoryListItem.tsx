@@ -1,4 +1,8 @@
-import { Memory } from '@/lib/db'
+'use client'
+
+import { memo, useCallback } from 'react'
+import type { Memory } from '@/lib/types'
+import { calculateMemoryStats } from '@/lib/utils'
 
 interface MemoryListItemProps {
   memory: Memory
@@ -6,13 +10,31 @@ interface MemoryListItemProps {
   onClick: (memory: Memory) => void
 }
 
-export function MemoryListItem({ memory, isSelected, onClick }: MemoryListItemProps) {
+/**
+ * MemoryListItem Component
+ *
+ * Renders a single memory item in the list with category, tags, and reading time.
+ * Memoized to prevent unnecessary re-renders.
+ */
+export const MemoryListItem = memo(function MemoryListItem({
+  memory,
+  isSelected,
+  onClick,
+}: MemoryListItemProps) {
+  const handleClick = useCallback(() => {
+    onClick(memory)
+  }, [memory, onClick])
+
+  const { minRead } = calculateMemoryStats(memory.content)
+
   return (
     <button
-      onClick={() => onClick(memory)}
-      className={`w-full text-left px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors ${
+      onClick={handleClick}
+      className={`w-full text-left px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
         isSelected ? 'bg-blue-50 dark:bg-blue-900/20 border-l-4 border-blue-500' : ''
       }`}
+      aria-selected={isSelected}
+      aria-label={`Memory from ${memory.date}${memory.category ? ` (${memory.category})` : ''}`}
     >
       <div className="flex items-center justify-between">
         <span className="text-sm font-medium text-slate-900 dark:text-white truncate flex-1">
@@ -24,7 +46,7 @@ export function MemoryListItem({ memory, isSelected, onClick }: MemoryListItemPr
           </span>
         )}
         <span className="ml-2 text-xs text-slate-500 flex-shrink-0">
-          {Math.ceil(memory.content.length / 100)} min read
+          {minRead} min read
         </span>
       </div>
       {memory.tags && memory.tags.length > 0 && (
@@ -38,10 +60,12 @@ export function MemoryListItem({ memory, isSelected, onClick }: MemoryListItemPr
             </span>
           ))}
           {memory.tags.length > 2 && (
-            <span className="inline-block text-xs text-slate-500">+{memory.tags.length - 2}</span>
+            <span className="inline-block text-xs text-slate-500">
+              +{memory.tags.length - 2}
+            </span>
           )}
         </div>
       )}
     </button>
   )
-}
+})

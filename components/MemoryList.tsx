@@ -59,7 +59,7 @@ export const MemoryList = memo(function MemoryList({
         ) : (
           memories.map((memory) => (
             <button
-              key={memory.date}
+              key={`${memory.date}-${memory.id}`}
               onClick={() => onSelect(memory)}
               className={`w-full text-left px-6 py-4 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 ${
                 selectedDate === memory.date
@@ -68,7 +68,7 @@ export const MemoryList = memo(function MemoryList({
               }`}
               role="option"
               aria-selected={selectedDate === memory.date}
-              aria-label={`Memory from ${memory.date}`}
+              aria-label={`Memory from ${memory.date}${memory.category ? ` (${memory.category})` : ''}`}
             >
               <div className="flex items-center justify-between gap-4">
                 <span className="text-sm font-medium text-slate-900 dark:text-white flex-1 truncate">

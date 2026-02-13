@@ -18,6 +18,12 @@ export interface MemoryAPIResponse {
   memories?: Memory[]
   memory?: Memory
   error?: string
+  code?: string
+  details?: unknown
+  count?: number
+  limit?: number
+  offset?: number
+  hasMore?: boolean
 }
 
 /** Pagination parameters */
@@ -39,4 +45,12 @@ export interface MemoryListItem {
   date: string
   content: string
   lineCount: number
+}
+
+/** Memory statistics */
+export interface MemoryStats {
+  lines: number
+  words: number
+  chars: number
+  minRead: number
 }

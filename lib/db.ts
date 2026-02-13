@@ -81,13 +81,13 @@ export async function getMemories(
   }
 
   try {
-    const memories = await sql<Memory[]>`
+    const memories = await sql`
       SELECT * FROM memories
       ORDER BY date DESC, created_at DESC
       LIMIT ${limit}
       OFFSET ${offset}
     `
-    return memories || []
+    return (memories as Memory[]) || []
   } catch (error) {
     console.error('Error fetching memories:', error)
     throw error
@@ -100,10 +100,11 @@ export async function getMemories(
  */
 export async function getMemoriesCount(): Promise<number> {
   try {
-    const result = await sql<[{ count: number }]>`
+    const result = await sql`
       SELECT COUNT(*) as count FROM memories
     `
-    return result[0]?.count ?? 0
+    const rows = result as Array<{ count: number }>
+    return rows[0]!?.count ?? 0
   } catch (error) {
     console.error('Error counting memories:', error)
     throw error
@@ -132,13 +133,14 @@ export async function getMemoryByDate(date: string): Promise<Memory | undefined>
   }
 
   try {
-    const memories = await sql<Memory[]>`
+    const memories = await sql`
       SELECT * FROM memories
       WHERE date = ${date}
       ORDER BY created_at DESC
       LIMIT 1
     `
-    return memories?.[0]
+    const rows = memories as Memory[]
+    return rows?.[0]
   } catch (error) {
     console.error(`Error fetching memory for date ${date}:`, error)
     throw new DatabaseError(
@@ -180,18 +182,19 @@ export async function createMemory(
   }
 
   try {
-    const result = await sql<Memory[]>`
+    const result = await sql`
       INSERT INTO memories (date, content, category, tags)
       VALUES (${date}, ${content}, ${category || null}, ${tags || null})
       RETURNING *
     `
-    if (!result || result.length === 0) {
+    const rows = result as Memory[]
+    if (!rows || rows.length === 0) {
       throw new DatabaseError(
         'Failed to create memory record',
         'INSERT_FAILED'
       )
     }
-    return result[0]
+    return rows[0]!!
   } catch (error) {
     if (error instanceof DatabaseError) throw error
     console.error(`Error creating memory for date ${date}:`, error)
@@ -235,7 +238,7 @@ export async function updateMemory(
 
   try {
     // Try to update first
-    const result = await sql<Memory[]>`
+    const result = await sql`
       UPDATE memories
       SET content = ${content},
           category = ${category || null},
@@ -244,9 +247,10 @@ export async function updateMemory(
       WHERE date = ${date}
       RETURNING *
     `
-
-    if (result && result.length > 0) {
-      return result[0]
+    
+    const rows = result as Memory[]
+    if (rows && rows.length > 0) {
+      return rows[0]!
     }
 
     // If no rows were updated, create new memory
