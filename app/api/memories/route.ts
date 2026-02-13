@@ -1,39 +1,23 @@
 import { NextResponse } from 'next/server'
-import fs from 'fs'
-import path from 'path'
+import { getMemories } from '@/lib/db'
 
 export async function GET() {
   try {
-    const memoryDir = path.join(process.cwd(), '..', 'memory')
+    const memoriesData = await getMemories();
     
-    // Check if directory exists
-    if (!fs.existsSync(memoryDir)) {
-      return NextResponse.json({ memories: [] })
-    }
+    const memories = memoriesData.map(memory => ({
+      date: memory.date,
+      content: memory.content,
+      category: memory.category,
+      tags: memory.tags
+    }));
 
-    // Read all files in the memory directory
-    const files = fs.readdirSync(memoryDir)
-    const memories = files
-      .filter(file => file.endsWith('.md'))
-      .map(file => {
-        const filePath = path.join(memoryDir, file)
-        const content = fs.readFileSync(filePath, 'utf-8')
-        const date = file.replace('.md', '')
-        
-        return {
-          date,
-          content,
-          path: filePath
-        }
-      })
-      .sort((a, b) => b.date.localeCompare(a.date)) // Sort by date descending
-
-    return NextResponse.json({ memories })
+    return NextResponse.json({ memories });
   } catch (error) {
-    console.error('Error reading memories:', error)
+    console.error('Error reading memories:', error);
     return NextResponse.json(
       { error: 'Failed to load memories' },
       { status: 500 }
-    )
+    );
   }
 }

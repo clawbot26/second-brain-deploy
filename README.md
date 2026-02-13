@@ -22,6 +22,28 @@ A NextJS-based dashboard to browse and manage your memories, documents, and task
 
 ## Getting Started
 
+### Setup
+
+1. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+2. **Configure environment** (create `.env.local`):
+   ```
+   DATABASE_URL=postgresql://...
+   ```
+
+3. **Initialize database**:
+   ```bash
+   npm run db:init
+   ```
+
+4. **Sync existing memories** (optional):
+   ```bash
+   npm run db:sync
+   ```
+
 ### Development
 ```bash
 npm run dev
@@ -34,6 +56,8 @@ Visit [http://localhost:3000](http://localhost:3000)
 npm run build
 npm start
 ```
+
+See [DATABASE.md](./DATABASE.md) for detailed database setup instructions.
 
 ## Project Structure
 
@@ -53,7 +77,7 @@ second-brain/
 
 ## Data Sources
 
-- **Memories**: `/root/.openclaw/workspace/memory/*.md`
+- **Memories**: Neon Postgres database (synced from `/root/.openclaw/workspace/memory/*.md`)
 - **Documents**: (to be configured)
 - **Tasks**: (to be configured)
 
@@ -63,7 +87,9 @@ second-brain/
 - **Styling**: Tailwind CSS
 - **Language**: TypeScript
 - **API**: NextJS API Routes
-- **Data**: File system (Markdown files)
+- **Database**: Neon Postgres (serverless)
+- **ORM**: @neondatabase/serverless
+- **Backup**: Local markdown files (`/root/.openclaw/workspace/memory/*.md`)
 
 ## Deployment
 
