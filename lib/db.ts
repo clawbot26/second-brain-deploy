@@ -38,34 +38,34 @@ export async function initDatabase() {
   `;
 }
 
-export async function getMemories() {
-  const memories = await sql<Memory[]>`
+export async function getMemories(): Promise<Memory[]> {
+  const memories = await sql`
     SELECT * FROM memories
     ORDER BY date DESC, created_at DESC
   `;
-  return memories;
+  return memories as Memory[];
 }
 
-export async function getMemoryByDate(date: string) {
-  const memories = await sql<Memory[]>`
+export async function getMemoryByDate(date: string): Promise<Memory | undefined> {
+  const memories = await sql`
     SELECT * FROM memories
     WHERE date = ${date}
     ORDER BY created_at DESC
   `;
-  return memories[0];
+  return memories[0] as Memory | undefined;
 }
 
-export async function createMemory(date: string, content: string, category?: string, tags?: string[]) {
-  const result = await sql<Memory[]>`
+export async function createMemory(date: string, content: string, category?: string, tags?: string[]): Promise<Memory> {
+  const result = await sql`
     INSERT INTO memories (date, content, category, tags)
     VALUES (${date}, ${content}, ${category || null}, ${tags || null})
     RETURNING *
   `;
-  return result[0];
+  return result[0] as Memory;
 }
 
-export async function updateMemory(date: string, content: string, category?: string, tags?: string[]) {
-  const result = await sql<Memory[]>`
+export async function updateMemory(date: string, content: string, category?: string, tags?: string[]): Promise<Memory> {
+  const result = await sql`
     UPDATE memories
     SET content = ${content},
         category = ${category || null},
@@ -79,5 +79,5 @@ export async function updateMemory(date: string, content: string, category?: str
     return createMemory(date, content, category, tags);
   }
   
-  return result[0];
+  return result[0] as Memory;
 }
