@@ -47,8 +47,23 @@ The dashboard reads from the database for real-time updates.
 ## Scripts
 
 - `npm run db:init` - Initialize database tables
-- `npm run db:sync` - Sync local memory files to database
+- `npm run db:sync` - Sync ALL local memory files to database
+- `npm run db:sync-one YYYY-MM-DD` - Sync a single memory file to database
 - `npm run dev` - Start development server
+
+### Helper Script
+
+For convenience, use the bash wrapper from anywhere:
+
+```bash
+/root/.openclaw/sync-memory.sh [YYYY-MM-DD]
+```
+
+If no date provided, syncs today's memory file. This script:
+1. Checks if the memory file exists
+2. Loads DATABASE_URL from .env.local
+3. Syncs the file to database
+4. Reports success or error
 
 ## API Endpoints
 
