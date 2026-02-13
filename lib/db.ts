@@ -8,6 +8,29 @@ if (!process.env.DATABASE_URL) {
 export const sql = neon(process.env.DATABASE_URL)
 
 /**
+ * Validate date format (YYYY-MM-DD)
+ * @param date - Date string to validate
+ * @returns true if valid, false otherwise
+ */
+function isValidDate(date: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(date)
+}
+
+/**
+ * Custom error class for database operations
+ */
+export class DatabaseError extends Error {
+  constructor(
+    message: string,
+    public code: string = 'DATABASE_ERROR',
+    public originalError?: unknown
+  ) {
+    super(message)
+    this.name = 'DatabaseError'
+  }
+}
+
+/**
  * Initialize the database with required tables and indexes
  * @throws Error if database initialization fails
  */
@@ -91,11 +114,21 @@ export async function getMemoriesCount(): Promise<number> {
  * Retrieve a single memory by date
  * @param date - The date of the memory (YYYY-MM-DD format)
  * @returns Memory object or undefined if not found
- * @throws Error if database query fails
+ * @throws DatabaseError if database query fails or validation fails
  */
 export async function getMemoryByDate(date: string): Promise<Memory | undefined> {
-  if (!date || !/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-    throw new Error('Invalid date format. Use YYYY-MM-DD')
+  if (!date) {
+    throw new DatabaseError(
+      'Date is required',
+      'VALIDATION_ERROR'
+    )
+  }
+
+  if (!isValidDate(date)) {
+    throw new DatabaseError(
+      'Invalid date format. Use YYYY-MM-DD',
+      'INVALID_DATE_FORMAT'
+    )
   }
 
   try {
@@ -108,7 +141,11 @@ export async function getMemoryByDate(date: string): Promise<Memory | undefined>
     return memories?.[0]
   } catch (error) {
     console.error(`Error fetching memory for date ${date}:`, error)
-    throw error
+    throw new DatabaseError(
+      `Failed to fetch memory for date ${date}`,
+      'FETCH_ERROR',
+      error
+    )
   }
 }
 
