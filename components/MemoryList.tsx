@@ -2,8 +2,7 @@
 
 import { memo } from 'react'
 import type { Memory } from '@/lib/types'
-import { useTimezone } from '@/lib/timezone-context'
-import { formatToLocalDateShort } from '@/lib/utils'
+import { formatDateShortWithoutTimezone } from '@/lib/utils'
 import { SkeletonList, EmptyState, Card } from './ui'
 
 interface MemoryListProps {
@@ -33,7 +32,6 @@ export const MemoryList = memo(function MemoryList({
   isLoading = false,
   error = null,
 }: MemoryListProps) {
-  const { timezone } = useTimezone()
   if (isLoading) {
     return (
       <Card padding="none" shadow="sm" className="overflow-hidden">
@@ -107,7 +105,7 @@ export const MemoryList = memo(function MemoryList({
                 <span className={`text-sm font-medium truncate flex-1 ${
                   isSelected ? 'text-primary-900 dark:text-primary-100' : 'text-surface-900 dark:text-white'
                 }`}>
-                  {formatToLocalDateShort(memory.date, timezone)}
+                  {formatDateShortWithoutTimezone(memory.date)}
                 </span>
                 <span className="text-xs text-surface-400 dark:text-surface-500 flex-shrink-0">
                   {lineCount} lines
