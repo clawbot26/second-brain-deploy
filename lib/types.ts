@@ -33,6 +33,7 @@ export interface MemoryAPIResponse {
 export interface MemoAPIResponse {
   memo?: Memory
   memory?: Memory
+  memos?: Memory[]
   memories?: Memory[]
   error?: string
   code?: string

@@ -80,3 +80,37 @@ export async function apiPost<T>(url: string, data: unknown): Promise<T> {
 
   return response.json()
 }
+
+/**
+ * Generic API PUT request with timezone support
+ */
+export async function apiPut<T>(url: string, data: unknown): Promise<T> {
+  const response = await apiFetch(url, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.statusText}`)
+  }
+
+  return response.json()
+}
+
+/**
+ * Generic API DELETE request with timezone support
+ */
+export async function apiDelete<T>(url: string): Promise<T> {
+  const response = await apiFetch(url, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error(`API request failed: ${response.statusText}`)
+  }
+
+  return response.json()
+}

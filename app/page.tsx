@@ -8,25 +8,43 @@ import {
   ErrorBoundary,
   SaveMemoForm,
   MemoList,
-  MemoViewer as MemoViewerComponent,
+  MemoViewer,
 } from '@/components'
+import { Button, TabNavigation, SkeletonCard, SkeletonList, EmptyState, Card } from '@/components/ui'
 import type { Memory, MemoryAPIResponse, Memo, MemoAPIResponse } from '@/lib/types'
-import { apiFetch } from '@/lib/api-client'
+import { apiFetch, apiPost, apiDelete, apiPut } from '@/lib/api-client'
+
+// Icons as components for consistency
+const BrainIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+  </svg>
+)
+
+const MemoIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+  </svg>
+)
+
+const DocumentIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+  </svg>
+)
+
+const TaskIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+  </svg>
+)
 
 /**
  * Home Page Component
  *
- * Main dashboard for browsing and viewing memories and memos.
- * Features:
- * - Statistics dashboard with memory and memo counts
- * - Memory timeline list with search and selection
- * - Memory viewer with content display
- * - Save memo form for quick note creation
- * - Saved memos list with management
- * - Memo viewer with edit and delete capabilities
- * - Error handling and loading states
- * - Dark mode support
- * - Tab-based navigation between memories and memos
+ * Modern dashboard with tab-based navigation between:
+ * - Memories: Daily memory timeline and viewer
+ * - Memos: Quick notes with CRUD operations
  */
 export default function Home() {
   // Memory state
@@ -40,23 +58,20 @@ export default function Home() {
   const [selectedMemo, setSelectedMemo] = useState<Memo | null>(null)
   const [memoLoading, setMemoLoading] = useState(true)
   const [memoError, setMemoError] = useState<string | null>(null)
-  const [memoSuccess, setMemoSuccess] = useState<string | null>(null)
-  const [memoDeleting, setMemoDeleting] = useState(false)
+  const [memoDeleting, setMemoDeleting] = useState<number | null>(null)
+  const [memoSaving, setMemoSaving] = useState(false)
 
   // UI state
   const [activeTab, setActiveTab] = useState<'memories' | 'memos'>('memories')
-  const [memoFilterCategory, setMemoFilterCategory] = useState<string>('')
 
   /**
    * Fetch memories from the API
-   * Handles loading state, error state, pagination, and timezone
    */
   const fetchMemories = useCallback(async () => {
     setMemoryLoading(true)
     setMemoryError(null)
 
     try {
-      // Use apiFetch to automatically include timezone header
       const response = await apiFetch('/api/memories?limit=100&offset=0', {
         method: 'GET',
         includeTimezone: true,
@@ -73,10 +88,9 @@ export default function Home() {
         setMemories([])
       } else if (data.memories && data.memories.length > 0) {
         setMemories(data.memories)
-        // Auto-select the first memory for initial load
         setSelectedMemory(data.memories[0]!)
-      } else if (data.memories) {
-        setMemories(data.memories)
+      } else {
+        setMemories(data.memories || [])
       }
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to load memories'
@@ -88,11 +102,110 @@ export default function Home() {
   }, [])
 
   /**
-   * Fetch memories on component mount
+   * Fetch memos from the API
+   */
+  const fetchMemos = useCallback(async () => {
+    setMemoLoading(true)
+    setMemoError(null)
+
+    try {
+      const response = await apiFetch('/api/memos?limit=100&offset=0', {
+        method: 'GET',
+        includeTimezone: true,
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch memos`)
+      }
+
+      const data: MemoAPIResponse = await response.json()
+
+      if (data.error) {
+        setMemoError(data.error)
+        setMemos([])
+      } else {
+        setMemos(data.memos || [])
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load memos'
+      setMemoError(errorMessage)
+      setMemos([])
+    } finally {
+      setMemoLoading(false)
+    }
+  }, [])
+
+  /**
+   * Handle saving a new memo
+   */
+  const handleSaveMemo = useCallback(async (content: string, category?: string, tags?: string[]): Promise<void> => {
+    setMemoSaving(true)
+    try {
+      const response = await apiPost<{ memo: Memo }>('/api/memos', {
+        content,
+        category,
+        tags,
+      })
+
+      setMemos((prev) => [response.memo, ...prev])
+      setSelectedMemo(response.memo)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to save memo'
+      setMemoError(errorMessage)
+      throw err
+    } finally {
+      setMemoSaving(false)
+    }
+  }, [])
+
+  /**
+   * Handle deleting a memo
+   */
+  const handleDeleteMemo = useCallback(async (memo: Memo) => {
+    setMemoDeleting(memo.id)
+    try {
+      await apiDelete(`/api/memos/${memo.id}`)
+      setMemos((prev) => prev.filter((m) => m.id !== memo.id))
+      if (selectedMemo?.id === memo.id) {
+        setSelectedMemo(null)
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to delete memo'
+      setMemoError(errorMessage)
+    } finally {
+      setMemoDeleting(null)
+    }
+  }, [selectedMemo])
+
+  /**
+   * Handle updating a memo
+   */
+  const handleUpdateMemo = useCallback(async (memo: Memo, content: string, category?: string, tags?: string[]): Promise<void> => {
+    try {
+      const response = await apiPut<{ memo: Memo }>(`/api/memos/${memo.id}`, {
+        content,
+        category,
+        tags,
+      })
+
+      setMemos((prev) =>
+        prev.map((m) => (m.id === memo.id ? response.memo : m))
+      )
+      setSelectedMemo(response.memo)
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to update memo'
+      setMemoError(errorMessage)
+      throw err
+    }
+  }, [])
+
+  /**
+   * Fetch data on mount
    */
   useEffect(() => {
     fetchMemories()
-  }, [fetchMemories])
+    fetchMemos()
+  }, [fetchMemories, fetchMemos])
 
   /**
    * Handle memory selection
@@ -101,60 +214,178 @@ export default function Home() {
     setSelectedMemory(memory)
   }, [])
 
+  /**
+   * Handle memo selection
+   */
+  const handleSelectMemo = useCallback((memo: Memo) => {
+    setSelectedMemo(memo)
+  }, [])
+
+  /**
+   * Dismiss errors
+   */
+  const dismissMemoryError = useCallback(() => setMemoryError(null), [])
+  const dismissMemoError = useCallback(() => setMemoError(null), [])
+
+  const tabs = [
+    { id: 'memories', label: 'Memories', icon: <BrainIcon />, badge: memories.length },
+    { id: 'memos', label: 'Memos', icon: <MemoIcon />, badge: memos.length },
+  ]
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      {/* Error Banner */}
-      <ErrorBoundary error={memoryError} onRetry={fetchMemories} />
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Error Banners */}
+      {memoryError && activeTab === 'memories' && (
+        <div className="mb-6">
+          <ErrorBoundary error={memoryError} onRetry={fetchMemories} onDismiss={dismissMemoryError} />
+        </div>
+      )}
+      {memoError && activeTab === 'memos' && (
+        <div className="mb-6">
+          <ErrorBoundary error={memoError} onRetry={fetchMemos} onDismiss={dismissMemoError} />
+        </div>
+      )}
 
       {/* Header Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         <StatCard
           icon="📝"
-          label="Total Memories"
+          label="Memories"
           value={memories.length}
+          trend={memories.length > 0 ? '+1 today' : undefined}
+          color="blue"
+        />
+        <StatCard
+          icon="📌"
+          label="Memos"
+          value={memos.length}
+          trend={memos.length > 0 ? 'active' : undefined}
+          color="amber"
         />
         <StatCard
           icon="📄"
           label="Documents"
-          value="Coming Soon"
+          value="—"
+          subtitle="Coming soon"
+          color="emerald"
+          comingSoon
         />
         <StatCard
           icon="✅"
           label="Tasks"
-          value="Coming Soon"
+          value="—"
+          subtitle="Coming soon"
+          color="purple"
+          comingSoon
         />
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Memory List */}
-        <div className="lg:col-span-1">
-          <MemoryList
-            memories={memories}
-            selectedDate={selectedMemory?.date}
-            onSelect={handleSelectMemory}
-            isLoading={memoryLoading}
-            error={memoryError}
+      {/* Tab Navigation */}
+      <div className="mb-6">
+        <TabNavigation
+          tabs={tabs}
+          activeTab={activeTab}
+          onChange={(tab) => setActiveTab(tab as 'memories' | 'memos')}
+          variant="pills"
+        />
+      </div>
+
+      {/* Memories Tab */}
+      {activeTab === 'memories' && (
+        <div className="animate-enter">
+          {/* Refresh Button Bar */}
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-surface-900 dark:text-white">
+              Memory Timeline
+            </h2>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={fetchMemories}
+              isLoading={memoryLoading}
+              leftIcon={
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              }
+            >
+              Refresh
+            </Button>
+          </div>
+
+          {/* Main Content Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Memory List */}
+            <div className="lg:col-span-1">
+              <MemoryList
+                memories={memories}
+                selectedDate={selectedMemory?.date}
+                onSelect={handleSelectMemory}
+                isLoading={memoryLoading}
+                error={memoryError}
+              />
+            </div>
+
+            {/* Memory Viewer */}
+            <div className="lg:col-span-2">
+              <MemoryViewer memory={selectedMemory} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Memos Tab */}
+      {activeTab === 'memos' && (
+        <div className="animate-enter space-y-6">
+          {/* Quick Add Form */}
+          <SaveMemoForm 
+            onSave={handleSaveMemo}
+            isLoading={memoSaving}
           />
-        </div>
 
-        {/* Memory Viewer */}
-        <div className="lg:col-span-2">
-          <MemoryViewer memory={selectedMemory} />
-        </div>
-      </div>
+          {/* Memos Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Memo List */}
+            <div className="lg:col-span-1">
+              {memoLoading ? (
+                <Card>
+                  <div className="p-4 border-b border-surface-200 dark:border-surface-700">
+                    <SkeletonCard lines={1} />
+                  </div>
+                  <div className="divide-y divide-surface-200 dark:divide-surface-700">
+                    <SkeletonList count={4} />
+                  </div>
+                </Card>
+              ) : memos.length === 0 ? (
+                <Card>
+                  <EmptyState
+                    icon="📌"
+                    title="No memos yet"
+                    description="Create your first memo using the form above. Memos are quick notes you can reference later."
+                  />
+                </Card>
+              ) : (
+                <MemoList
+                  memos={memos}
+                  selectedId={selectedMemo?.id}
+                  onSelect={handleSelectMemo}
+                  onDelete={handleDeleteMemo}
+                />
+              )}
+            </div>
 
-      {/* Refresh Button */}
-      <div className="mt-8 flex justify-center">
-        <button
-          onClick={fetchMemories}
-          disabled={memoryLoading}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 text-white rounded-lg transition-colors font-medium"
-          aria-label="Refresh memories"
-        >
-          {memoryLoading ? 'Loading...' : 'Refresh Memories'}
-        </button>
-      </div>
+            {/* Memo Viewer */}
+            <div className="lg:col-span-2">
+              <MemoViewer
+                memo={selectedMemo}
+                onDelete={handleDeleteMemo}
+                onUpdate={handleUpdateMemo}
+                isDeleting={memoDeleting === selectedMemo?.id}
+              />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -3,6 +3,7 @@
 import { memo, useMemo } from 'react'
 import type { Memory } from '@/lib/types'
 import { calculateMemoryStats } from '@/lib/utils'
+import { Card, Badge, EmptyState } from './ui'
 
 interface MemoryViewerProps {
   memory: Memory | null
@@ -24,59 +25,94 @@ export const MemoryViewer = memo(function MemoryViewer({
     return calculateMemoryStats(memory.content)
   }, [memory])
 
+  if (!memory) {
+    return (
+      <Card padding="lg" shadow="sm" className="h-full min-h-[400px]">
+        <EmptyState
+          icon="📖"
+          title="Select a Memory"
+          description="Choose a memory from the timeline to view its full content here."
+        />
+      </Card>
+    )
+  }
+
   return (
-    <div className="bg-white dark:bg-slate-800 rounded-lg shadow flex flex-col">
-      <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-700 flex-shrink-0">
-        <div className="flex justify-between items-center gap-4">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-white truncate">
-            {memory ? memory.date : 'Select a Memory'}
-          </h2>
-          {memory && stats && (
-            <div className="flex gap-4 text-xs text-slate-500 flex-shrink-0">
-              <span>{stats.lines} lines</span>
-              <span>{stats.words} words</span>
-              <span>{stats.minRead} min read</span>
+    <Card padding="none" shadow="sm" className="h-full">
+      {/* Header */}
+      <div className="px-6 py-5 border-b border-surface-200 dark:border-surface-700 bg-surface-50/50 dark:bg-surface-800/50">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h2 className="text-xl font-bold text-surface-900 dark:text-white">
+              {memory.date}
+            </h2>
+            {memory.category && (
+              <Badge variant="primary" className="mt-2">
+                {memory.category}
+              </Badge>
+            )}
+          </div>
+          
+          {stats && (
+            <div className="flex items-center gap-3 text-xs text-surface-500 dark:text-surface-400">
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" />
+                </svg>
+                {stats.lines} lines
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
+                </svg>
+                {stats.words} words
+              </span>
+              <span className="flex items-center gap-1">
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {stats.minRead} min read
+              </span>
             </div>
           )}
         </div>
       </div>
 
-      <div className="px-6 py-6 flex-1 overflow-y-auto">
-        {memory ? (
-          <div className="prose prose-slate dark:prose-invert max-w-none">
-            <pre
-              className="whitespace-pre-wrap text-sm bg-slate-50 dark:bg-slate-900 p-4 rounded-lg overflow-x-auto font-mono leading-relaxed"
-              aria-label={`Content of memory from ${memory.date}`}
-            >
-              {memory.content}
-            </pre>
-            {memory.tags && memory.tags.length > 0 && (
-              <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                <p className="text-sm font-medium text-slate-600 dark:text-slate-400 mb-2">
-                  Tags
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {memory.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="inline-block px-3 py-1 text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 rounded-full"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="h-full flex items-center justify-center text-center">
-            <div className="text-slate-500">
-              <div className="text-4xl mb-4">📖</div>
-              <p>Select a memory from the timeline to view its contents</p>
+      {/* Content */}
+      <div className="p-6">
+        <pre className="whitespace-pre-wrap text-sm leading-relaxed font-mono text-surface-700 dark:text-surface-300 bg-surface-50 dark:bg-surface-900/50 p-5 rounded-xl border border-surface-200 dark:border-surface-700 overflow-x-auto">
+          {memory.content}
+        </pre>
+
+        {/* Tags */}
+        {memory.tags && memory.tags.length > 0 && (
+          <div className="mt-6 pt-6 border-t border-surface-200 dark:border-surface-700">
+            <div className="flex items-center gap-2 mb-3">
+              <svg className="w-4 h-4 text-surface-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+              </svg>
+              <span className="text-sm font-medium text-surface-600 dark:text-surface-400">
+                Tags
+              </span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {memory.tags.map((tag) => (
+                <Badge key={tag} variant="info">
+                  {tag}
+                </Badge>
+              ))}
             </div>
           </div>
         )}
+
+        {/* Footer Metadata */}
+        <div className="mt-6 pt-4 border-t border-surface-200 dark:border-surface-700 flex items-center gap-4 text-xs text-surface-500 dark:text-surface-400">
+          <span>Created {new Date(memory.created_at).toLocaleDateString()}</span>
+          {memory.updated_at !== memory.created_at && (
+            <span>Updated {new Date(memory.updated_at).toLocaleDateString()}</span>
+          )}
+        </div>
       </div>
-    </div>
+    </Card>
   )
 })
