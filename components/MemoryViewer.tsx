@@ -2,7 +2,8 @@
 
 import { memo, useMemo } from 'react'
 import type { Memory } from '@/lib/types'
-import { calculateMemoryStats } from '@/lib/utils'
+import { useTimezone } from '@/lib/timezone-context'
+import { calculateMemoryStats, formatToLocalDateLong, formatTimestamp } from '@/lib/utils'
 import { Card, Badge, EmptyState } from './ui'
 
 interface MemoryViewerProps {
@@ -20,6 +21,7 @@ interface MemoryViewerProps {
 export const MemoryViewer = memo(function MemoryViewer({
   memory,
 }: MemoryViewerProps) {
+  const { timezone } = useTimezone()
   const stats = useMemo(() => {
     if (!memory) return null
     return calculateMemoryStats(memory.content)
@@ -44,7 +46,7 @@ export const MemoryViewer = memo(function MemoryViewer({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-surface-900 dark:text-white">
-              {memory.date}
+              {formatToLocalDateLong(memory.date, timezone)}
             </h2>
             {memory.category && (
               <Badge variant="primary" className="mt-2">
@@ -107,9 +109,9 @@ export const MemoryViewer = memo(function MemoryViewer({
 
         {/* Footer Metadata */}
         <div className="mt-6 pt-4 border-t border-surface-200 dark:border-surface-700 flex items-center gap-4 text-xs text-surface-500 dark:text-surface-400">
-          <span>Created {new Date(memory.created_at).toLocaleDateString()}</span>
+          <span>Created {formatTimestamp(memory.created_at, timezone)}</span>
           {memory.updated_at !== memory.created_at && (
-            <span>Updated {new Date(memory.updated_at).toLocaleDateString()}</span>
+            <span>Updated {formatTimestamp(memory.updated_at, timezone)}</span>
           )}
         </div>
       </div>
