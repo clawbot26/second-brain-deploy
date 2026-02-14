@@ -25,12 +25,33 @@ A modern Next.js-based dashboard for managing memories, memos, and (soon) docume
 - **🌍 Timezone-Aware**: Automatic timezone detection and formatting
 
 ### 🚧 Coming Soon
-- **🔍 Search**: Full-text search across memories and memos
-- **📄 Documents**: Browse and manage document files
-- **✅ Tasks**: Track and manage tasks with due dates
-- **📅 Calendar View**: View memories by calendar date
-- **📤 Export**: Export to PDF/Markdown
-- **🔗 MEMORY.md Integration**: View long-term curated memories
+
+#### 📄 Documents (Idea Capture Hub)
+**Purpose:** Central place for organizing things you ask me to remember
+- **Idea capture** - Store concepts, thoughts, requests
+- **Review hub** - Browse all your ideas and thoughts
+- **Todo generation** - Convert ideas into actionable tasks
+- **Kanban integration** - Push todos to your Kanban board
+
+**Workflow:** Ideas → Documents → Tasks → Kanban
+
+#### ✅ Tasks
+- Task management with due dates and reminders
+- Priority levels and categories
+- Integration with Documents and Kanban board
+- Export tasks to Kanban for visual tracking
+
+#### 🔍 Search
+- Full-text search across memories, memos, and documents
+
+#### 📅 Calendar View
+- View all content by calendar date
+
+#### 📤 Export
+- Export to PDF/Markdown
+
+#### 🔗 MEMORY.md Integration
+- View long-term curated memories
 
 ## 🚀 Getting Started
 
