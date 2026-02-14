@@ -10,8 +10,9 @@ import {
   MemoList,
   MemoViewer,
 } from '@/components'
+import { ContentHub } from '@/components/content/ContentHub'
 import { Button, TabNavigation, SkeletonCard, SkeletonList, EmptyState, Card } from '@/components/ui'
-import type { Memory, MemoryAPIResponse, Memo, MemoAPIResponse } from '@/lib/types'
+import type { Memory, MemoryAPIResponse, Memo, MemoAPIResponse, ContentItem, ContentAPIResponse } from '@/lib/types'
 import { apiFetch, apiPost, apiDelete, apiPut } from '@/lib/api-client'
 
 // Icons as components for consistency
@@ -39,6 +40,12 @@ const TaskIcon = () => (
   </svg>
 )
 
+const ContentIcon = () => (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+  </svg>
+)
+
 /**
  * Home Page Component
  *
@@ -61,8 +68,13 @@ export default function Home() {
   const [memoDeleting, setMemoDeleting] = useState<number | null>(null)
   const [memoSaving, setMemoSaving] = useState(false)
 
+  // Content state
+  const [contentItems, setContentItems] = useState<ContentItem[]>([])
+  const [contentLoading, setContentLoading] = useState(true)
+  const [contentError, setContentError] = useState<string | null>(null)
+
   // UI state
-  const [activeTab, setActiveTab] = useState<'memories' | 'memos'>('memories')
+  const [activeTab, setActiveTab] = useState<'memories' | 'memos' | 'content'>('memories')
 
   /**
    * Fetch memories from the API
@@ -200,12 +212,47 @@ export default function Home() {
   }, [])
 
   /**
+   * Fetch content items from the API
+   */
+  const fetchContent = useCallback(async () => {
+    setContentLoading(true)
+    setContentError(null)
+
+    try {
+      const response = await apiFetch('/api/content?limit=100&offset=0', {
+        method: 'GET',
+        includeTimezone: true,
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch content`)
+      }
+
+      const data: ContentAPIResponse<ContentItem[]> = await response.json()
+
+      if (data.error) {
+        setContentError(data.error)
+        setContentItems([])
+      } else {
+        setContentItems(data.data || [])
+      }
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to load content'
+      setContentError(errorMessage)
+      setContentItems([])
+    } finally {
+      setContentLoading(false)
+    }
+  }, [])
+
+  /**
    * Fetch data on mount
    */
   useEffect(() => {
     fetchMemories()
     fetchMemos()
-  }, [fetchMemories, fetchMemos])
+    fetchContent()
+  }, [fetchMemories, fetchMemos, fetchContent])
 
   /**
    * Handle memory selection
@@ -226,10 +273,12 @@ export default function Home() {
    */
   const dismissMemoryError = useCallback(() => setMemoryError(null), [])
   const dismissMemoError = useCallback(() => setMemoError(null), [])
+  const dismissContentError = useCallback(() => setContentError(null), [])
 
   const tabs = [
     { id: 'memories', label: 'Memories', icon: <BrainIcon />, badge: memories.length },
     { id: 'memos', label: 'Memos', icon: <MemoIcon />, badge: memos.length },
+    { id: 'content', label: 'Content', icon: <ContentIcon />, badge: contentItems.length },
   ]
 
   return (
@@ -243,6 +292,11 @@ export default function Home() {
       {memoError && activeTab === 'memos' && (
         <div className="mb-6">
           <ErrorBoundary error={memoError} onRetry={fetchMemos} onDismiss={dismissMemoError} />
+        </div>
+      )}
+      {contentError && activeTab === 'content' && (
+        <div className="mb-6">
+          <ErrorBoundary error={contentError} onRetry={fetchContent} onDismiss={dismissContentError} />
         </div>
       )}
 
@@ -263,12 +317,11 @@ export default function Home() {
           color="amber"
         />
         <StatCard
-          icon="📄"
-          label="Documents"
-          value="—"
-          subtitle="Coming soon"
+          icon="📚"
+          label="Content"
+          value={contentItems.length}
+          trend={contentItems.length > 0 ? 'saved' : undefined}
           color="emerald"
-          comingSoon
         />
         <StatCard
           icon="✅"
@@ -285,7 +338,7 @@ export default function Home() {
         <TabNavigation
           tabs={tabs}
           activeTab={activeTab}
-          onChange={(tab) => setActiveTab(tab as 'memories' | 'memos')}
+          onChange={(tab) => setActiveTab(tab as 'memories' | 'memos' | 'content')}
           variant="pills"
         />
       </div>
@@ -384,6 +437,13 @@ export default function Home() {
               />
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Content Tab */}
+      {activeTab === 'content' && (
+        <div className="animate-enter space-y-6">
+          <ContentHub />
         </div>
       )}
     </div>
