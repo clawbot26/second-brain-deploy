@@ -91,6 +91,69 @@ export function formatToLocalDateLong(dateString: string, timezone: string): str
 }
 
 /**
+ * Format a date string to a short readable format
+ * @param dateString - Date string in YYYY-MM-DD format or ISO format
+ * @param timezone - IANA timezone string (e.g., 'America/New_York')
+ * @returns Formatted date string (e.g., "Feb 12, 2026")
+ */
+export function formatToLocalDateShort(dateString: string, timezone: string): string {
+  try {
+    const date = new Date(dateString)
+    return date.toLocaleDateString('en-US', {
+      timeZone: timezone,
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  } catch {
+    return dateString
+  }
+}
+
+/**
+ * Format a timestamp to a readable date/time string
+ * @param timestamp - ISO timestamp string or Date
+ * @param timezone - IANA timezone string
+ * @returns Formatted date/time (e.g., "Feb 12, 2026 at 3:45 PM")
+ */
+export function formatTimestamp(timestamp: string | Date, timezone: string): string {
+  try {
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp
+    return date.toLocaleString('en-US', {
+      timeZone: timezone,
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+  } catch {
+    return String(timestamp)
+  }
+}
+
+/**
+ * Format just the time from a timestamp
+ * @param timestamp - ISO timestamp string or Date
+ * @param timezone - IANA timezone string
+ * @returns Formatted time (e.g., "3:45 PM")
+ */
+export function formatTimeOnly(timestamp: string | Date, timezone: string): string {
+  try {
+    const date = typeof timestamp === 'string' ? new Date(timestamp) : timestamp
+    return date.toLocaleTimeString('en-US', {
+      timeZone: timezone,
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+    })
+  } catch {
+    return ''
+  }
+}
+
+/**
  * Get the browser's detected timezone
  * @returns IANA timezone string (e.g., 'America/New_York')
  */
