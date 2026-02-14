@@ -1,166 +1,210 @@
 'use client'
 
 import { useCallback, useState } from 'react'
-import type { Memo } from '@/lib/types'
-import { apiPost } from '@/lib/api-client'
+import { Button, Card, Badge } from './ui'
 
 interface SaveMemoFormProps {
-  onMemoSaved?: (memo: Memo) => void
-  onError?: (error: string) => void
+  onSave: (content: string, category?: string, tags?: string[]) => Promise<void>
+  isLoading?: boolean
 }
 
 /**
  * SaveMemoForm Component
  *
- * Form for quickly saving a new memo with optional tags and category.
- * Provides a clean, simple interface for creating memos.
+ * Modern form for quickly saving a new memo with optional tags and category.
+ * Clean, focused interface with inline tag creation.
  *
- * Features:
- * - Quick memo input
- * - Optional category selection
- * - Tag input with comma-separated support
- * - Loading state feedback
- * - Error handling
- * - Auto-clear on successful save
- * - Dark mode support
- *
- * @param onMemoSaved - Callback when memo is successfully saved
- * @param onError - Callback when an error occurs
+ * @param onSave - Callback when memo is saved
+ * @param isLoading - Whether save is in progress
  */
-export function SaveMemoForm({ onMemoSaved, onError }: SaveMemoFormProps) {
+export function SaveMemoForm({ onSave, isLoading = false }: SaveMemoFormProps) {
   const [content, setContent] = useState('')
   const [category, setCategory] = useState('')
-  const [tagsInput, setTagsInput] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [tagInput, setTagInput] = useState('')
+  const [tags, setTags] = useState<string[]>([])
   const [error, setError] = useState<string | null>(null)
+  const [isExpanded, setIsExpanded] = useState(false)
 
-  const handleSubmit = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleAddTag = useCallback(() => {
+    const trimmed = tagInput.trim()
+    if (trimmed && !tags.includes(trimmed)) {
+      setTags([...tags, trimmed])
+      setTagInput('')
+    }
+  }, [tagInput, tags])
+
+  const handleRemoveTag = useCallback((tagToRemove: string) => {
+    setTags(tags.filter((t) => t !== tagToRemove))
+  }, [tags])
+
+  const handleKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
       e.preventDefault()
-      setError(null)
+      handleAddTag()
+    }
+    if (e.key === 'Backspace' && !tagInput && tags.length > 0) {
+      setTags(tags.slice(0, -1))
+    }
+  }, [handleAddTag, tagInput, tags])
 
-      if (!content.trim()) {
-        const errorMsg = 'Memo content cannot be empty'
-        setError(errorMsg)
-        onError?.(errorMsg)
-        return
-      }
+  const handleSubmit = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
 
-      setIsLoading(true)
-      try {
-        // Parse tags from comma-separated input
-        const tags = tagsInput
-          .split(',')
-          .map((tag) => tag.trim())
-          .filter((tag) => tag.length > 0)
+    if (!content.trim()) {
+      setError('Please enter some content for your memo')
+      return
+    }
 
-        const response = await apiPost<{ memo: Memo }>('/api/memos', {
-          content: content.trim(),
-          category: category.trim() || undefined,
-          tags: tags.length > 0 ? tags : undefined,
-        })
+    try {
+      await onSave(content.trim(), category.trim() || undefined, tags.length > 0 ? tags : undefined)
+      // Reset form
+      setContent('')
+      setCategory('')
+      setTags([])
+      setTagInput('')
+      setIsExpanded(false)
+    } catch {
+      setError('Failed to save memo. Please try again.')
+    }
+  }, [content, category, tags, onSave])
 
-        const { memo } = response
-        setContent('')
-        setCategory('')
-        setTagsInput('')
-        onMemoSaved?.(memo)
-      } catch (err) {
-        const errorMsg = err instanceof Error ? err.message : 'Failed to save memo'
-        setError(errorMsg)
-        onError?.(errorMsg)
-      } finally {
-        setIsLoading(false)
-      }
-    },
-    [content, category, tagsInput, onMemoSaved, onError]
-  )
+  const handleClear = useCallback(() => {
+    setContent('')
+    setCategory('')
+    setTags([])
+    setTagInput('')
+    setError(null)
+  }, [])
+
+  const hasContent = content.trim().length > 0
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-slate-800 rounded-lg shadow p-6 mb-6">
-      <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-        ✏️ Save a Memo
-      </h2>
-
-      {error && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded text-red-700 dark:text-red-300 text-sm">
-          {error}
-        </div>
-      )}
-
-      {/* Content Input */}
-      <div className="mb-4">
-        <textarea
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          placeholder="What do you want to remember? Quick notes, reminders, ideas..."
-          className="w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-          rows={3}
-          disabled={isLoading}
-          aria-label="Memo content"
-        />
-      </div>
-
-      {/* Category and Tags Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-        {/* Category Input */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Category (optional)
-          </label>
-          <input
-            type="text"
-            value={category}
-            onChange={(e) => setCategory(e.target.value)}
-            placeholder="e.g., Work, Personal, Health"
-            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+    <Card padding="md" shadow="sm">
+      <form onSubmit={handleSubmit}>
+        {/* Main Input Area */}
+        <div className="relative">
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            onFocus={() => setIsExpanded(true)}
+            placeholder="What's on your mind? Jot down a quick thought, idea, or reminder..."
+            className="w-full px-4 py-4 bg-surface-50 dark:bg-surface-900/50 border border-surface-200 dark:border-surface-700 rounded-xl text-surface-900 dark:text-white placeholder-surface-400 dark:placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent resize-none transition-all duration-200"
+            rows={isExpanded ? 3 : 2}
             disabled={isLoading}
-            aria-label="Memo category"
           />
+          <div className="absolute bottom-3 right-3 text-xs text-surface-400 dark:text-surface-500">
+            {content.length} chars
+          </div>
         </div>
 
-        {/* Tags Input */}
-        <div>
-          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-            Tags (optional, comma-separated)
-          </label>
-          <input
-            type="text"
-            value={tagsInput}
-            onChange={(e) => setTagsInput(e.target.value)}
-            placeholder="e.g., urgent, important, follow-up"
-            className="w-full px-4 py-2 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            disabled={isLoading}
-            aria-label="Memo tags"
-          />
-        </div>
-      </div>
+        {/* Expanded Options */}
+        {isExpanded && (
+          <div className="mt-4 space-y-4 animate-enter">
+            {/* Error Message */}
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-sm text-red-700 dark:text-red-300 flex items-center gap-2">
+                <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                {error}
+              </div>
+            )}
 
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-3">
-        <button
-          type="button"
-          onClick={() => {
-            setContent('')
-            setCategory('')
-            setTagsInput('')
-            setError(null)
-          }}
-          disabled={isLoading}
-          className="px-4 py-2 text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 disabled:bg-slate-100 dark:disabled:bg-slate-700 disabled:opacity-50 rounded-lg transition-colors font-medium text-sm"
-          aria-label="Clear form"
-        >
-          Clear
-        </button>
-        <button
-          type="submit"
-          disabled={isLoading || !content.trim()}
-          className="px-4 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 dark:disabled:bg-slate-600 text-white rounded-lg transition-colors font-medium text-sm disabled:cursor-not-allowed"
-          aria-label="Save memo"
-        >
-          {isLoading ? 'Saving...' : '💾 Save Memo'}
-        </button>
-      </div>
-    </form>
+            {/* Category & Tags Row */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* Category */}
+              <div>
+                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                  Category
+                </label>
+                <input
+                  type="text"
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  placeholder="e.g., Work, Personal"
+                  className="w-full px-3 py-2 bg-surface-50 dark:bg-surface-900/50 border border-surface-200 dark:border-surface-700 rounded-lg text-sm text-surface-900 dark:text-white placeholder-surface-400 dark:placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                  disabled={isLoading}
+                />
+              </div>
+
+              {/* Tag Input */}
+              <div>
+                <label className="block text-sm font-medium text-surface-700 dark:text-surface-300 mb-2">
+                  Tags
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={tagInput}
+                    onChange={(e) => setTagInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Press Enter to add"
+                    className="flex-1 px-3 py-2 bg-surface-50 dark:bg-surface-900/50 border border-surface-200 dark:border-surface-700 rounded-lg text-sm text-surface-900 dark:text-white placeholder-surface-400 dark:placeholder-surface-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+                    disabled={isLoading}
+                  />
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    size="sm"
+                    onClick={handleAddTag}
+                    disabled={!tagInput.trim() || isLoading}
+                  >
+                    Add
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Selected Tags */}
+            {tags.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {tags.map((tag) => (
+                  <Badge key={tag} variant="primary">
+                    <span className="flex items-center gap-1">
+                      {tag}
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveTag(tag)}
+                        className="ml-1 hover:text-primary-800 dark:hover:text-primary-200"
+                        disabled={isLoading}
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    </span>
+                  </Badge>
+                ))}
+              </div>
+            )}
+
+            {/* Action Buttons */}
+            <div className="flex items-center justify-end gap-3 pt-2 border-t border-surface-200 dark:border-surface-700">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={handleClear}
+                disabled={isLoading || (!hasContent && !category && tags.length === 0)}
+              >
+                Clear
+              </Button>
+              <Button
+                type="submit"
+                isLoading={isLoading}
+                disabled={!hasContent}
+                leftIcon={
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                }
+              >
+                Save Memo
+              </Button>
+            </div>
+          </div>
+        )}
+      </form>
+    </Card>
   )
 }
