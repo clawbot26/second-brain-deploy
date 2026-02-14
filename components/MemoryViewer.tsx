@@ -3,7 +3,7 @@
 import { memo, useMemo } from 'react'
 import type { Memory } from '@/lib/types'
 import { useTimezone } from '@/lib/timezone-context'
-import { calculateMemoryStats, formatToLocalDateLong, formatTimestamp } from '@/lib/utils'
+import { calculateMemoryStats, formatDateWithoutTimezone, formatTimestamp } from '@/lib/utils'
 import { Card, Badge, EmptyState } from './ui'
 
 interface MemoryViewerProps {
@@ -46,7 +46,7 @@ export const MemoryViewer = memo(function MemoryViewer({
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-xl font-bold text-surface-900 dark:text-white">
-              {formatToLocalDateLong(memory.date, timezone)}
+              {formatDateWithoutTimezone(memory.date)}
             </h2>
             {memory.category && (
               <Badge variant="primary" className="mt-2">

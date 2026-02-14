@@ -91,6 +91,67 @@ export function formatToLocalDateLong(dateString: string, timezone: string): str
 }
 
 /**
+ * Format a date string to a long date format WITHOUT timezone conversion
+ * This treats the date as a calendar date only, preserving the exact date from the string
+ * @param dateString - Date string in YYYY-MM-DD format
+ * @returns Formatted date string (e.g., "Friday, February 13, 2026")
+ */
+export function formatDateWithoutTimezone(dateString: string): string {
+  try {
+    // Parse the date parts directly to avoid timezone conversion
+    const parts = dateString.split('-')
+    if (parts.length !== 3) return dateString
+    
+    const [yearStr, monthStr, dayStr] = parts as [string, string, string]
+    const year = parseInt(yearStr, 10)
+    const month = parseInt(monthStr, 10)
+    const day = parseInt(dayStr, 10)
+    
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return dateString
+    
+    // Create date at local midnight (month is 0-indexed in JavaScript Date)
+    const date = new Date(year, month - 1, day)
+    return date.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  } catch {
+    return dateString
+  }
+}
+
+/**
+ * Format a date string to a short date format WITHOUT timezone conversion
+ * This treats the date as a calendar date only, preserving the exact date from the string
+ * @param dateString - Date string in YYYY-MM-DD format
+ * @returns Formatted date string (e.g., "Feb 13, 2026")
+ */
+export function formatDateShortWithoutTimezone(dateString: string): string {
+  try {
+    const parts = dateString.split('-')
+    if (parts.length !== 3) return dateString
+    
+    const [yearStr, monthStr, dayStr] = parts as [string, string, string]
+    const year = parseInt(yearStr, 10)
+    const month = parseInt(monthStr, 10)
+    const day = parseInt(dayStr, 10)
+    
+    if (isNaN(year) || isNaN(month) || isNaN(day)) return dateString
+    
+    const date = new Date(year, month - 1, day)
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    })
+  } catch {
+    return dateString
+  }
+}
+
+/**
  * Format a date string to a short readable format
  * @param dateString - Date string in YYYY-MM-DD format or ISO format
  * @param timezone - IANA timezone string (e.g., 'America/New_York')
