@@ -74,8 +74,22 @@
         "created_at": "2026-03-02T14:21:11.172Z",
         "updated_at": "2026-03-02T14:21:11.172Z"
       }
+    ],
+    [
+      6,
+      {
+        "id": 6,
+        "date": "2026-03-02",
+        "content": "Tech Prep: Posted full 24-question diagnostic assessment across all 12 front-end interview categories. Awaiting Dhsiao answers to establish baseline skill levels.",
+        "category": "tech-prep",
+        "tags": [
+          "tech-prep"
+        ],
+        "created_at": "2026-03-02T16:01:49.846Z",
+        "updated_at": "2026-03-02T16:01:49.846Z"
+      }
     ]
   ],
-  "counter": 6,
-  "updatedAt": "2026-03-02T14:21:11.287Z"
+  "counter": 7,
+  "updatedAt": "2026-03-02T16:01:49.932Z"
 }
