@@ -88,8 +88,24 @@
         "created_at": "2026-03-02T16:01:49.846Z",
         "updated_at": "2026-03-02T16:01:49.846Z"
       }
+    ],
+    [
+      7,
+      {
+        "id": 7,
+        "date": "2026-03-02",
+        "content": "Job Search: Missing state management (Redux/Zustand), React Query/TanStack Query, and GraphQL. Suggested project: Task Management Dashboard with Zustand + React Query. 5 job leads provided including Barracuda Networks alumni, Adobe, SF Bay Area Next.js roles.",
+        "category": "job-search",
+        "tags": [
+          "job-search",
+          "resume-review",
+          "2025-03"
+        ],
+        "created_at": "2026-03-02T17:02:11.666Z",
+        "updated_at": "2026-03-02T17:02:11.666Z"
+      }
     ]
   ],
-  "counter": 7,
-  "updatedAt": "2026-03-02T16:01:49.932Z"
+  "counter": 8,
+  "updatedAt": "2026-03-02T17:02:11.778Z"
 }
