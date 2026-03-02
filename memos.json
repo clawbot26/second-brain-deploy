@@ -59,8 +59,23 @@
         "created_at": "2026-03-02T05:00:50.278Z",
         "updated_at": "2026-03-02T05:00:50.278Z"
       }
+    ],
+    [
+      5,
+      {
+        "id": 5,
+        "date": "2026-03-02",
+        "content": "Generated morning brief: US-Iran conflict day 2, Taiwan defense budget review, PRC South China Sea tensions, real estate doc automation SaaS idea",
+        "category": "general",
+        "tags": [
+          "general",
+          "2026-03-02"
+        ],
+        "created_at": "2026-03-02T14:21:11.172Z",
+        "updated_at": "2026-03-02T14:21:11.172Z"
+      }
     ]
   ],
-  "counter": 5,
-  "updatedAt": "2026-03-02T05:00:50.366Z"
+  "counter": 6,
+  "updatedAt": "2026-03-02T14:21:11.287Z"
 }
