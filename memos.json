@@ -161,8 +161,22 @@
         "created_at": "2026-03-03T05:55:00.019Z",
         "updated_at": "2026-03-03T05:55:00.019Z"
       }
+    ],
+    [
+      12,
+      {
+        "id": 12,
+        "date": "2026-03-03",
+        "content": "Test memo from investigation",
+        "category": "test",
+        "tags": [
+          "debug"
+        ],
+        "created_at": "2026-03-03T06:37:46.766Z",
+        "updated_at": "2026-03-03T06:37:46.766Z"
+      }
     ]
   ],
-  "counter": 12,
-  "updatedAt": "2026-03-03T05:55:00.121Z"
+  "counter": 13,
+  "updatedAt": "2026-03-03T06:37:46.851Z"
 }
