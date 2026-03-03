@@ -147,8 +147,22 @@
         "created_at": "2026-03-03T05:51:41.188Z",
         "updated_at": "2026-03-03T05:51:41.188Z"
       }
+    ],
+    [
+      11,
+      {
+        "id": 11,
+        "date": "2026-03-03",
+        "content": "Tech prep update: Testing Q11 don’t know; Q12 basic (no tools/examples). System design Q13 don’t know. Logged in profile notes.",
+        "category": "tech-prep",
+        "tags": [
+          "tech-prep"
+        ],
+        "created_at": "2026-03-03T05:55:00.019Z",
+        "updated_at": "2026-03-03T05:55:00.019Z"
+      }
     ]
   ],
-  "counter": 11,
-  "updatedAt": "2026-03-03T05:51:41.303Z"
+  "counter": 12,
+  "updatedAt": "2026-03-03T05:55:00.121Z"
 }
