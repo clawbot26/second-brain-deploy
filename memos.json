@@ -189,8 +189,22 @@
         "created_at": "2026-03-03T06:38:34.967Z",
         "updated_at": "2026-03-03T06:38:34.967Z"
       }
+    ],
+    [
+      14,
+      {
+        "id": 14,
+        "date": "2026-03-03",
+        "content": "Tech prep update: Performance Q15 basic (no metrics/tools), Q16 don’t know. Logged in profile notes.",
+        "category": "tech-prep",
+        "tags": [
+          "tech-prep"
+        ],
+        "created_at": "2026-03-03T06:41:18.603Z",
+        "updated_at": "2026-03-03T06:41:18.603Z"
+      }
     ]
   ],
-  "counter": 14,
-  "updatedAt": "2026-03-03T06:38:35.046Z"
+  "counter": 15,
+  "updatedAt": "2026-03-03T06:41:18.706Z"
 }
